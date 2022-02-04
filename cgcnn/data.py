@@ -6,6 +6,7 @@ import json
 import os
 import random
 import warnings
+import pickle
 
 import numpy as np
 import torch
@@ -324,6 +325,11 @@ class CIFData(Dataset):
                                                    cif_id+'.cif'))
         atom_fea = np.vstack([self.ari.get_atom_fea(crystal[i].specie.number)
                               for i in range(len(crystal))])
+        with open(os.path.join(self.root_dir, "cif-data.pkl"), "rb") as f:
+            cif_dict = pickle.load(f)
+        crystal = Structure.from_str(
+            os.path.join(self.root_dir, cif_dict[cif_id]), fmt="cif"
+        )
         atom_fea = torch.Tensor(atom_fea)
         all_nbrs = crystal.get_all_neighbors(self.radius, include_index=True)
         all_nbrs = [sorted(nbrs, key=lambda x: x[1]) for nbrs in all_nbrs]
