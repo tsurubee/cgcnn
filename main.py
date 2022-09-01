@@ -77,6 +77,7 @@ parser.add_argument('--n-conv', default=3, type=int, metavar='N',
                     help='number of conv layers')
 parser.add_argument('--n-h', default=1, type=int, metavar='N',
                     help='number of hidden layers after pooling')
+parser.add_argument("--save-dir", default=".", type=str, help="Save directory path (default: .)")
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -197,11 +198,11 @@ def main():
             'optimizer': optimizer.state_dict(),
             'normalizer': normalizer.state_dict(),
             'args': vars(args)
-        }, is_best)
+        }, is_best, args.save_dir)
 
     # test best model
     print('---------Evaluate Model on Test Set---------------')
-    best_checkpoint = torch.load('model_best.pth.tar')
+    best_checkpoint = torch.load(os.path.join(args.save_dir, 'model_best.pth.tar'))
     model.load_state_dict(best_checkpoint['state_dict'])
     validate(test_loader, model, criterion, normalizer, test=True)
 
@@ -495,10 +496,11 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
-    torch.save(state, filename)
+def save_checkpoint(state, is_best, save_dir, filename='checkpoint.pth.tar'):
+    file_path = os.path.join(save_dir, filename)
+    torch.save(state, file_path)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(file_path, os.path.join(save_dir, 'model_best.pth.tar'))
 
 
 def adjust_learning_rate(optimizer, epoch, k):
